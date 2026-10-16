@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PIIN y Cuenta Corriente EE. UU.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+
+/* Layout: cuaderno de una columna. Año arriba; el diagrama baja del flujo (cuenta corriente) al stock (PIIN = A − L). */
+:root{
+  --bg:#F2F4F3; --surface:#FFFFFF; --surface-2:#E7ECEA; --line:#CDD6D3;
+  --fg:#16211F; --muted:#56635F; --faint:#8A9692;
+  --ink:#0F3D3E; --ink-soft:#DCE8E6;
+  --gold:#9A6A10; --gold-soft:#F5E9CC;
+  --ok:#1E7A4C; --ok-soft:#DDF1E5; --bad:#B42318; --bad-soft:#FBE3E0;
+  --s1:#2a78d6; --s2:#eb6834; --grid:#E3E8E6;
+  --display:"Source Serif 4", Georgia, serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1716; --surface:#16211F; --surface-2:#1D2B29; --line:#2E3F3C;
+  --fg:#E4ECEA; --muted:#9AABA6; --faint:#6F807B;
+  --ink:#7CC4BA; --ink-soft:#1C3533; --gold:#E2B85C; --gold-soft:#352A12;
+  --ok:#5FD098; --ok-soft:#163324; --bad:#FF8A7D; --bad-soft:#3B1C19;
+  --s1:#3987e5; --s2:#d95926; --grid:#26332F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1716; --surface:#16211F; --surface-2:#1D2B29; --line:#2E3F3C;
+  --fg:#E4ECEA; --muted:#9AABA6; --faint:#6F807B;
+  --ink:#7CC4BA; --ink-soft:#1C3533; --gold:#E2B85C; --gold-soft:#352A12;
+  --ok:#5FD098; --ok-soft:#163324; --bad:#FF8A7D; --bad-soft:#3B1C19;
+  --s1:#3987e5; --s2:#d95926; --grid:#26332F; color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:clamp(1.6rem,4.4vw,2.2rem)}
+h2{font-size:1.35rem;color:var(--ink)}
+h3{font-size:1.05rem}
+p{margin:0;max-width:68ch}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.num,.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+section{display:flex;flex-direction:column;gap:12px}
+.note{background:var(--gold-soft);border-radius:8px;padding:10px 14px;font-size:.92rem}
+.keybox{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.keybox div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.keybox b{color:var(--ink)}
+.keybox span{font-size:.9rem;color:var(--muted)}
+
+/* selector de años */
+.years{display:flex;flex-wrap:wrap;gap:6px}
+.yr{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;cursor:pointer;font-family:var(--mono);font-size:.85rem}
+.yr[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.sticky{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+
+/* diagrama */
+.flow{display:flex;flex-direction:column;gap:0;align-items:stretch}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.stage.key{border:2px solid var(--ink)}
+.stage .lab{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.stage .lab b{font-family:var(--display);font-size:1.08rem;color:var(--ink)}
+.tag{font-size:.72rem;font-weight:600;border-radius:4px;padding:2px 8px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.tag.flow-t{background:var(--ink-soft);color:var(--ink)}
+.tag.stock-t{background:var(--gold-soft);color:var(--gold)}
+.terms{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.term{background:var(--bg);border-radius:6px;padding:6px 10px;display:flex;flex-direction:column;min-width:0}
+.term small{font-size:.72rem;color:var(--muted)}
+.term .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500}
+.op{font-family:var(--mono);color:var(--faint);font-size:1.1rem}
+.res{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.4rem;font-weight:500}
+.chk{font-size:.85rem;color:var(--muted)}
+.chk .okc{color:var(--ok);font-weight:600}
+.arrow{display:flex;align-items:center;gap:10px;padding:6px 0 6px 22px;color:var(--muted);font-size:.88rem}
+.arrow svg{flex:none}
+.na{color:var(--faint);font-style:italic}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:560px){.split{grid-template-columns:1fr}}
+.mini{width:100%;border-collapse:collapse;font-size:.88rem}
+.mini td{padding:3px 0;border-bottom:1px solid var(--grid)}
+.mini td:last-child{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* pasos */
+ol.steps{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:8px}
+ol.steps li{max-width:70ch}
+ol.steps .calc{display:block;font-family:var(--mono);font-size:.9rem;background:var(--surface-2);border-radius:6px;padding:6px 10px;margin-top:4px;overflow-x:auto;white-space:pre-wrap}
+
+/* gráficos */
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;position:relative}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font-size:.8rem;padding:6px 9px;border-radius:6px;font-family:var(--mono);white-space:nowrap;transform:translate(-50%,-110%)}
+.axis{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+
+/* tabla */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table.big{border-collapse:collapse;font-size:.84rem;min-width:860px;width:100%}
+table.big th,table.big td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--grid);font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.big th{font-family:var(--body);font-weight:600;color:var(--muted);font-size:.76rem;text-align:right;vertical-align:bottom;white-space:normal}
+table.big td:first-child,table.big th:first-child{text-align:left}
+table.big tr.sel td{background:var(--ink-soft)}
+table.big tr{cursor:pointer}
+.src-c{color:var(--faint)}
+
+/* práctica */
+.ex{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.mode{display:flex;gap:6px;flex-wrap:wrap}
+.mode button,.btn{border:1.5px solid var(--ink);background:transparent;color:var(--ink);border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:500}
+.mode button[aria-pressed="true"],.btn.solid{background:var(--ink);color:var(--bg)}
+.ans{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ans input{width:11em;max-width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);font-family:var(--mono)}
+.fb{border-radius:8px;padding:10px 14px;font-size:.94rem;display:flex;flex-direction:column;gap:6px}
+.fb.hint{background:var(--gold-soft)}.fb.good{background:var(--ok-soft)}.fb.miss{background:var(--bad-soft)}
+.fb pre{margin:0;font-family:var(--mono);font-size:.86rem;white-space:pre-wrap}
+.scorebar{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:.88rem;color:var(--muted)}
+.scorebar b{color:var(--fg);font-weight:500}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header style="display:flex;flex-direction:column;gap:10px">
+  <span class="eyebrow">Caso HBS 706-002 · Anexo 6 (p. 24), con Anexos 4a y 9a</span>
+  <h1>PIIN y cuenta corriente de EE. UU., 1980–2019</h1>
+  <p class="muted">El Anexo 6 entrega <b>stocks</b>: activos (A), pasivos (L) y su composición. La cuenta corriente es un <b>flujo</b> y no está en esa tabla: sale del Anexo 4a (y el 9a para 2008 y 2010). Esta página resuelve cada año y muestra cómo se conecta un dato con el otro.</p>
+</header>
+
+<section>
+  <div class="keybox">
+    <div><b>PIIN = A − L</b><span>Stock a fin de año. Anexo 6. Clase Desbalances globales, lám. 26.</span></div>
+    <div><b>CC = bienes + servicios + ingreso primario + secundario</b><span>Flujo del año. Anexo 4a. Clase, lám. 7.</span></div>
+    <div><b>ΔPIIN = CC + valoración</b><span>Une flujo y stock. Anexo 9a. Clase, lám. 31.</span></div>
+  </div>
+</section>
+
+<div class="sticky">
+  <span class="eyebrow">Elige un año del Anexo 6</span>
+  <div class="years" id="years" role="group" aria-label="Año"></div>
+</div>
+
+<section id="diagram" aria-live="polite"></section>
+<section id="steps"></section>
+
+<section>
+  <h2>La trayectoria</h2>
+  <div class="chart" id="c1"><h3>Activos y pasivos externos de EE. UU. (mm de US$)</h3><div class="legend"><span><i style="background:var(--s1)"></i>Activos (A)</span><span><i style="background:var(--s2)"></i>Pasivos (L)</span></div><div class="cv"></div><p class="muted" style="font-size:.85rem">La distancia vertical entre las dos líneas es la PIIN. Desde 1988 los pasivos superan a los activos.</p></div>
+  <div class="chart" id="c2"><h3>PIIN (% del PIB)</h3><div class="cv"></div><p class="muted" style="font-size:.85rem">Azul: acreedor neto. Naranja: deudor neto. Fila “Addendum” del Anexo 6.</p></div>
+  <div class="chart" id="c3"><h3 id="c3t">Posición neta por instrumento</h3><div class="cv"></div><p class="muted" style="font-size:.85rem">Neto = % del instrumento × A − % del instrumento × L. EE. UU. es acreedor en acciones e inversión directa (activos riesgosos) y deudor en deuda y activos oficiales (pasivos seguros): la base del diferencial de retorno.</p></div>
+</section>
+
+<section>
+  <h2>Tabla resuelta</h2>
+  <p class="muted">Toca una fila para ver ese año en el diagrama. “A − L” es el cálculo; “PIIN” es lo que informa el anexo. El PIB implícito sale de PIIN ÷ (PIIN % del PIB), por eso es aproximado.</p>
+  <div class="tablewrap"><table class="big" id="tbl"></table></div>
+  <p class="muted" style="font-size:.85rem"><span class="src-c">n/d</span>: el caso no trae el dato del año anterior, así que no se puede separar la valoración. Valores en mm de US$. Fuentes: Anexo 6 (stocks), Anexo 4a (flujos), Anexo 9a (PIIN 1999, 2004 y ΔPIIN anuales).</p>
+</section>
+
+<section>
+  <h2>Practica</h2>
+  <p class="muted">Ejercicios con los datos del caso o con valores nuevos. Escribe el número en mm de US$ (o en lo que pida la pregunta). Puntaje: 1 al primer intento, 0,5 con pista, 0 si fallas dos veces. Tu puntaje se guarda en este navegador.</p>
+  <div class="ex">
+    <div class="mode" role="group" aria-label="Tipo de valores"><button id="mCase" aria-pressed="true">Datos del caso</button><button id="mNew" aria-pressed="false">Valores nuevos</button></div>
+    <div class="scorebar" id="score"></div>
+    <div id="exq"></div>
+  </div>
+</section>
+
+<section>
+  <h2>Cómo leer el diagrama</h2>
+  <ol class="steps">
+    <li><b>Cuenta corriente.</b> Suma de cuatro balanzas del año. Un déficit significa que EE. UU. gastó más de lo que ingresó y tuvo que financiarse afuera.</li>
+    <li><b>Cuenta financiera.</b> Es el financiamiento de ese déficit: el aumento de activos de EE. UU. en el exterior menos el aumento de activos extranjeros en EE. UU. (sus pasivos). Por la identidad de la balanza de pagos, cuenta financiera = CC + cuenta de capital + discrepancia estadística.</li>
+    <li><b>Valoración.</b> Además de los flujos, cambia el precio de lo que ya se tiene: acciones, bonos y tipo de cambio. Es lo que la cuenta corriente no ve.</li>
+    <li><b>ΔPIIN y PIIN.</b> El stock de fin de año es el del año anterior más el flujo y la valoración. Es lo que publica el Anexo 6 como A − L.</li>
+  </ol>
+  <p class="note">Por qué no sale directo la CC del Anexo 6: el anexo salta años (1980, 1984, 1988…). Entre dos columnas separadas por varios años, ΔPIIN acumula varios déficits y varias valoraciones, y no se pueden separar sin los datos de cada año.</p>
+</section>
+</div>
+
+<script>
+/* ---------- DATOS DEL CASO ---------- */
+const YRS=[1980,1984,1988,1992,1996,2000,2002,2005,2007,2008,2009,2010,2014,2016,2017,2018,2019];
+const E6={ // Anexo 6
+ piin:[297,140,21,-432,-328,-1536,-2410,-1857,-1279,-3995,-2627,-2511,-6944,-8129,-7622,-9674,-11051],
+ A:[839,1214,2099,2611,4792,7642,7066,13358,20705,19424,19427,21769,24884,24031,27772,25234,29153],
+ L:[542,1074,2077,3043,5120,9179,9476,15215,21984,23419,22054,24280,31828,32161,35395,34908,40203],
+ pct:[10,3,0,-7,-4,-15,-22,-14,-9,-27,-18,-17,-40,-43,-39,-47,-52],
+ aRes:[20,9,7,6,3,2,2,1,1,2,2,2,2,2,2,2,2],
+ aDI:[35,29,37,36,37,38,32,30,28,19,25,25,29,31,32,29,30],
+ aBond:[7,7,8,10,12,9,13,10,10,8,11,10,12,12,12,14,13],
+ aEq:[2,2,6,12,21,24,19,25,25,14,21,23,27,30,33,31,32],
+ aOth:[35,53,41,36,27,26,33,34,35,57,41,40,30,26,21,23,22],
+ lOff:[33,19,16,15,16,11,13,15,16,17,20,20,19,18,18,18,17],
+ lDI:[18,24,23,28,27,33,24,21,19,13,16,17,20,23,25,24,26],
+ lTr:[3,6,5,6,8,4,5,4,3,4,4,5,6,7,6,7,7],
+ lCorp:[3,4,10,10,11,13,18,16,17,13,14,13,11,13,13,12,11],
+ lEq:[12,9,10,10,12,17,13,14,13,8,11,12,18,18,19,19,20],
+ lCash:[null,null,null,null,null,null,12,9,9,9,10,9,8,8,8,8,8],
+ lOth:[30,38,37,31,25,22,15,20,24,36,25,24,17,13,11,12,11]
+};
+// Anexo 4a (null = sin dato en el caso). CC 2008 y 2010 del Anexo 9a.
+const A4={
+ 1980:{cc:2,g:-26,s:6,p:30,sec:-8,fa:25,dA:87,dL:62,der:null,ka:null,disc:23},
+ 1984:{cc:-94,g:-112,s:3,p:35,sec:-20,fa:-76,dA:51,dL:126,der:null,ka:null,disc:19},
+ 1988:{cc:-121,g:-127,s:12,p:19,sec:-25,fa:-138,dA:106,dL:244,der:null,ka:null,disc:-17},
+ 1992:{cc:-52,g:-97,s:58,p:24,sec:-37,fa:-94,dA:85,dL:179,der:null,ka:1,disc:-44},
+ 1996:{cc:-125,g:-191,s:87,p:22,sec:-43,fa:-134,dA:425,dL:559,der:null,ka:0,disc:-10},
+ 2000:{cc:-402,g:-447,s:77,p:15,sec:-47,fa:-478,dA:588,dL:1066,der:null,ka:-4,disc:-72},
+ 2002:{cc:-456,g:-475,s:55,p:18,sec:-53,fa:-503,dA:319,dL:822,der:null,ka:-4,disc:-43},
+ 2005:{cc:-749,g:-783,s:66,p:44,sec:-77,fa:-714,dA:563,dL:1277,der:null,ka:1,disc:34},
+ 2007:{cc:-737,g:-821,s:110,p:64,sec:-90,fa:-633,dA:1563,dL:2190,der:-6,ka:-6,disc:110},
+ 2008:{cc:-697,src9a:true},
+ 2009:{cc:-380,g:-510,s:115,p:116,sec:-100,fa:-239,dA:131,dL:326,der:-45,ka:-6,disc:146},
+ 2010:{cc:-432,src9a:true},
+ 2014:{cc:-368,g:-750,s:266,p:200,sec:-84,fa:-297,dA:867,dL:1109,der:-54,ka:-7,disc:77},
+ 2016:{cc:-395,g:-750,s:269,p:197,sec:-111,fa:-364,dA:335,dL:707,der:8,ka:-7,disc:38},
+ 2017:{cc:-365,g:-799,s:286,p:258,sec:-109,fa:-334,dA:1188,dL:1546,der:24,ka:12,disc:19},
+ 2018:{cc:-450,g:-880,s:300,p:251,sec:-121,fa:-420,dA:359,dL:758,der:-20,ka:-4,disc:34},
+ 2019:{cc:-480,g:-864,s:287,p:236,sec:-140,fa:-396,dA:441,dL:798,der:-38,ka:-6,disc:91}
+};
+// PIIN del año anterior: del Anexo 6 si es consecutivo; si no, del Anexo 9a.
+const PREV={2000:{v:-1002,src:"Anexo 9a (−1.536 − (−534))"},2002:{v:-2294,src:"Anexo 9a (−2.410 − (−116))"},2005:{v:-2363,src:"Anexo 9a (PIIN 2004)"},2007:{v:-1808,src:"Anexo 9a (PIIN 2006)"},2008:{v:-1279,src:"Anexo 6 (2007)"},2009:{v:-3995,src:"Anexo 6 (2008)"},2010:{v:-2627,src:"Anexo 6 (2009)"},2014:{v:-5367,src:"Anexo 9a (−6.944 − (−1.577))"},2016:{v:-7460,src:"Anexo 9a (PIIN 2015)"},2017:{v:-8129,src:"Anexo 6 (2016)"},2018:{v:-7622,src:"Anexo 6 (2017)"},2019:{v:-9674,src:"Anexo 6 (2018)"}};
+const INSTR=[["Activos oficiales","aRes","lOff"],["Inversión directa","aDI","lDI"],["Deuda (bonos, Treasuries)","aBond",["lTr","lCorp"]],["Acciones","aEq","lEq"],["Otros (incl. efectivo y derivados)","aOth",["lCash","lOth"]]];
+
+/* ---------- utilidades ---------- */
+const $=s=>document.querySelector(s);
+const nf=new Intl.NumberFormat("es-CL",{maximumFractionDigits:0});
+const f=x=>x==null||isNaN(x)?"—":(x<0?"−":"")+nf.format(Math.abs(Math.round(x)));
+const fs=x=>x==null?"—":(x>0?"+":"")+f(x);
+const dec=x=>(x<0?"−":"")+String(Math.abs(x)).replace(".",",");
+const pc=x=>(x<0?"−":"")+String(Math.abs(x)).replace(".",",")+"%";
+const idx=y=>YRS.indexOf(y);
+function get(y){const i=idx(y);const o={y,A:E6.A[i],L:E6.L[i],piin:E6.piin[i],pct:E6.pct[i],a4:A4[y]};
+ o.calc=o.A-o.L;o.gdp=o.pct?o.piin/(o.pct/100):null;
+ const pv=PREV[y];o.prev=pv?pv.v:null;o.prevSrc=pv?pv.src:null;o.d=pv?o.piin-pv.v:null;
+ o.val=(o.d!=null&&o.a4)?o.d-o.a4.cc:null;return o;}
+function net(i,ins){const a=E6[ins[1]][i];const lk=Array.isArray(ins[2])?ins[2]:[ins[2]];const l=lk.reduce((s,k)=>s+(E6[k][i]||0),0);return{a:a/100*E6.A[i],l:l/100*E6.L[i],ap:a,lp:l};}
+
+let SEL=2019;try{const v=+localStorage.getItem("piin-year");if(YRS.includes(v))SEL=v;}catch(e){}
+
+/* ---------- años ---------- */
+function renderYears(){$("#years").innerHTML=YRS.map(y=>`<button class="yr" aria-pressed="${y===SEL}" data-y="${y}">${y}</button>`).join("");}
+
+/* ---------- diagrama ---------- */
+const ARW=`<svg width="14" height="22" viewBox="0 0 14 22" aria-hidden="true"><path d="M7 1v17M2 13l5 6 5-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function term(l,v){return `<div class="term"><small>${l}</small><span class="v">${v}</span></div>`;}
+function renderDiagram(){
+ const o=get(SEL),a=o.a4,i=idx(SEL);let h=`<h2>${SEL}: de la cuenta corriente a la PIIN</h2>`;
+ // 1. CC
+ h+=`<div class="flow"><div class="stage"><div class="lab"><b>1 · Cuenta corriente</b><span class="tag flow-t">Flujo del año · Anexo 4a</span></div>`;
+ if(a&&!a.src9a){const sum=a.g+a.s+a.p+a.sec;
+  h+=`<div class="terms">${term("Bienes",f(a.g))}<span class="op">+</span>${term("Servicios",fs(a.s))}<span class="op">+</span>${term("Ingreso primario",fs(a.p))}<span class="op">+</span>${term("Ingreso secundario",fs(a.sec))}<span class="op">=</span><span class="res">${f(a.cc)}</span></div>
+  <span class="chk">Suma de componentes: ${f(sum)} ${Math.abs(sum-a.cc)<=3?'<span class="okc">✓ cuadra (diferencia por redondeo)</span>':''}</span>`;}
+ else if(a&&a.src9a){h+=`<div class="terms"><span class="res">${f(a.cc)}</span></div><span class="chk">El Anexo 4a no trae ${SEL}; la CC sale del Anexo 9a, sin desglose.</span>`;}
+ h+=`</div><div class="arrow">${ARW}<span>se financia con la cuenta financiera</span></div>`;
+ // 2. CF
+ h+=`<div class="stage"><div class="lab"><b>2 · Cuenta financiera (préstamo neto)</b><span class="tag flow-t">Flujo · Anexo 4a</span></div>`;
+ if(a&&!a.src9a){const flow=a.dA-a.dL+(a.der||0);const bop=a.cc+(a.ka||0)+a.disc;
+  h+=`<div class="terms">${term("↑ Activos de EE. UU. en el exterior",f(a.dA))}<span class="op">−</span>${term("↑ Activos extranjeros en EE. UU. (pasivos)",f(a.dL))}${a.der!=null?`<span class="op">+</span>${term("Derivados",fs(a.der))}`:""}<span class="op">=</span><span class="res">${f(a.fa)}</span></div>
+  <span class="chk">Cálculo: ${f(flow)}. Identidad de la balanza de pagos: CC ${f(a.cc)} + cuenta de capital ${a.ka==null?"(sin dato)":fs(a.ka)} + discrepancia ${fs(a.disc)} = ${f(bop)} ${Math.abs(bop-a.fa)<=3?'<span class="okc">✓</span>':''}</span>`;}
+ else h+=`<span class="na">Sin desglose en el caso para ${SEL}.</span>`;
+ h+=`</div><div class="arrow">${ARW}<span>más el cambio de precios del stock que ya existía</span></div>`;
+ // 3. Valoración
+ h+=`<div class="stage"><div class="lab"><b>3 · ΔPIIN = CC + valoración</b><span class="tag">Puente flujo → stock · Anexo 9a</span></div>`;
+ if(o.d!=null){h+=`<div class="terms">${term("PIIN "+(SEL-1),f(o.prev))}<span class="op">→</span>${term("PIIN "+SEL,f(o.piin))}<span class="op">⇒</span>${term("ΔPIIN",fs(o.d))}</div>
+  <div class="terms">${term("ΔPIIN",fs(o.d))}<span class="op">−</span>${term("CC",f(a.cc))}<span class="op">=</span>${term("Valoración",fs(o.val))}</div>
+  <span class="chk">${o.val>0?"Ganancia de valoración: los activos externos subieron de precio o el dólar se depreció.":"Pérdida de valoración: los activos de EE. UU. en manos extranjeras subieron más (bolsa de EE. UU.) o el dólar se apreció."} PIIN ${SEL-1}: ${o.prevSrc}.</span>`;}
+ else h+=`<span class="na">El caso no trae la PIIN de ${SEL-1}, así que no se puede separar la valoración de ${SEL}.</span>`;
+ h+=`</div><div class="arrow">${ARW}<span>queda el stock de fin de año</span></div>`;
+ // 4. Stock
+ h+=`<div class="stage key"><div class="lab"><b>4 · PIIN = A − L</b><span class="tag stock-t">Stock a fin de año · Anexo 6</span></div>
+  <div class="terms">${term("Activos (A)",f(o.A))}<span class="op">−</span>${term("Pasivos (L)",f(o.L))}<span class="op">=</span><span class="res">${f(o.calc)}</span></div>
+  <span class="chk">Informado: ${f(o.piin)} ${Math.abs(o.calc-o.piin)<=2?'<span class="okc">✓ cuadra</span>':''} · ${pc(o.pct)} del PIB → PIB implícito ≈ ${o.gdp?f(o.gdp):"no calculable (0%)"} · ${o.piin>=0?"acreedor neto":"deudor neto"}</span>
+  <div class="split"><div><h3 style="font-size:.9rem;margin-bottom:4px">Activos de EE. UU. en el exterior</h3><table class="mini">${[["Reservas oficiales","aRes"],["Inversión directa","aDI"],["Bonos extranjeros","aBond"],["Acciones extranjeras","aEq"],["Otros","aOth"]].map(([n,k])=>`<tr><td>${n} (${E6[k][i]}%)</td><td>${f(E6[k][i]/100*o.A)}</td></tr>`).join("")}</table></div>
+  <div><h3 style="font-size:.9rem;margin-bottom:4px">Pasivos (activos extranjeros en EE. UU.)</h3><table class="mini">${[["Activos oficiales","lOff"],["Inversión directa","lDI"],["Treasuries","lTr"],["Bonos corporativos y otros","lCorp"],["Acciones de EE. UU.","lEq"],["Efectivo y depósitos","lCash"],["Otros","lOth"]].filter(([n,k])=>E6[k][i]!=null).map(([n,k])=>`<tr><td>${n} (${E6[k][i]}%)</td><td>${f(E6[k][i]/100*o.L)}</td></tr>`).join("")}</table></div></div>
+  <span class="chk">Montos por instrumento = % del anexo × total (cálculo propio; los % están redondeados).</span></div></div>`;
+ $("#diagram").innerHTML=h;
+ renderSteps(o);
+}
+function renderSteps(o){const a=o.a4;let s=[];
+ s.push(`<li><b>PIIN como stock.</b><span class="calc">A − L = ${f(o.A)} − ${f(o.L)} = ${f(o.calc)}   (anexo: ${f(o.piin)})</span></li>`);
+ s.push(`<li><b>PIIN en % del PIB y PIB implícito.</b><span class="calc">${o.pct?`PIB ≈ PIIN ÷ (${pc(o.pct)}) = ${f(o.piin)} ÷ ${dec(o.pct/100)} ≈ ${f(o.gdp)}`:`El anexo da 0% (PIIN de ${f(o.piin)} es casi nula frente al PIB): no se puede despejar el PIB.`}</span></li>`);
+ if(a&&!a.src9a)s.push(`<li><b>Cuenta corriente.</b><span class="calc">${f(a.g)} + ${f(a.s)} + ${f(a.p)} + (${f(a.sec)}) = ${f(a.g+a.s+a.p+a.sec)}   (anexo: ${f(a.cc)})</span></li>`);
+ else if(a)s.push(`<li><b>Cuenta corriente.</b><span class="calc">Anexo 9a: ${f(a.cc)}</span></li>`);
+ if(o.d!=null)s.push(`<li><b>Valoración.</b><span class="calc">ΔPIIN = ${f(o.piin)} − (${f(o.prev)}) = ${fs(o.d)}\nValoración = ΔPIIN − CC = ${fs(o.d)} − (${f(a.cc)}) = ${fs(o.val)}</span></li>`);
+ const i=idx(SEL);const n=INSTR.map(x=>({n:x[0],...net(i,x)}));
+ s.push(`<li><b>Posición neta por instrumento.</b><span class="calc">${n.map(x=>`${x.n}: ${x.ap}% × ${f(E6.A[i])} − ${x.lp}% × ${f(E6.L[i])} = ${fs(x.a-x.l)}`).join("\n")}</span></li>`);
+ $("#steps").innerHTML=`<h2>Resuelto paso a paso, ${SEL}</h2><ol class="steps">${s.join("")}</ol>`;}
+
+/* ---------- gráficos ---------- */
+function svgEl(w,h,inner){return `<svg viewBox="0 0 ${w} ${h}" role="img">${inner}</svg>`;}
+function tipBind(box){const tip=document.createElement("div");tip.className="tip";tip.hidden=true;box.appendChild(tip);
+ box.querySelectorAll("[data-tip]").forEach(el=>{el.addEventListener("pointerenter",e=>{tip.textContent=el.dataset.tip;tip.hidden=false;});
+  el.addEventListener("pointermove",e=>{const r=box.getBoundingClientRect();tip.style.left=(e.clientX-r.left)+"px";tip.style.top=(e.clientY-r.top)+"px";});
+  el.addEventListener("pointerleave",()=>tip.hidden=true);
+  el.addEventListener("click",()=>{if(el.dataset.y){SEL=+el.dataset.y;update();}});});}
+function chart1(){const W=760,H=300,m={l:56,r:72,t:12,b:28};const xs=y=>m.l+(y-1980)/(2019-1980)*(W-m.l-m.r);const max=42000;const ys=v=>m.t+(1-v/max)*(H-m.t-m.b);
+ let g="";[0,10000,20000,30000,40000].forEach(v=>{g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--grid)"/><text class="axis" x="${m.l-8}" y="${ys(v)+4}" text-anchor="end">${f(v)}</text>`;});
+ [1980,1990,2000,2010,2019].forEach(y=>g+=`<text class="axis" x="${xs(y)}" y="${H-8}" text-anchor="middle">${y}</text>`);
+ const path=k=>YRS.map((y,i)=>`${i?"L":"M"}${xs(y).toFixed(1)},${ys(E6[k][i]).toFixed(1)}`).join("");
+ g+=`<line x1="${xs(SEL)}" x2="${xs(SEL)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--faint)" stroke-dasharray="3 3"/>`;
+ g+=`<path d="${path("A")}" fill="none" stroke="var(--s1)" stroke-width="2"/><path d="${path("L")}" fill="none" stroke="var(--s2)" stroke-width="2"/>`;
+ YRS.forEach((y,i)=>{const r=y===SEL?5:3.5;g+=`<circle cx="${xs(y)}" cy="${ys(E6.A[i])}" r="${r}" fill="var(--s1)" stroke="var(--surface)" stroke-width="2"/><circle cx="${xs(y)}" cy="${ys(E6.L[i])}" r="${r}" fill="var(--s2)" stroke="var(--surface)" stroke-width="2"/>`;
+  g+=`<rect x="${xs(y)-10}" y="${m.t}" width="20" height="${H-m.t-m.b}" fill="transparent" data-y="${y}" data-tip="${y} · A ${f(E6.A[i])} · L ${f(E6.L[i])} · PIIN ${f(E6.piin[i])}" style="cursor:pointer"/>`;});
+ g+=`<text class="axis" x="${W-m.r+6}" y="${ys(E6.A[16])+4}" style="fill:var(--fg)">A ${f(E6.A[16])}</text><text class="axis" x="${W-m.r+6}" y="${ys(E6.L[16])+4}" style="fill:var(--fg)">L ${f(E6.L[16])}</text>`;
+ const b=$("#c1 .cv");b.innerHTML=svgEl(W,H,g);tipBind($("#c1"));}
+function chart2(){const W=760,H=240,m={l:44,r:12,t:12,b:28};const n=YRS.length;const bw=(W-m.l-m.r)/n;const ys=v=>m.t+(10-v)/(10+55)*(H-m.t-m.b);
+ let g="";[10,0,-20,-40].forEach(v=>g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${ys(v)}" y2="${ys(v)}" stroke="${v===0?"var(--muted)":"var(--grid)"}"/><text class="axis" x="${m.l-6}" y="${ys(v)+4}" text-anchor="end">${v}%</text>`);
+ YRS.forEach((y,i)=>{const v=E6.pct[i];const x=m.l+i*bw+2;const w=bw-4;const y0=ys(0),y1=ys(v);const top=Math.min(y0,y1),hh=Math.max(1,Math.abs(y1-y0));
+  g+=`<rect x="${x}" y="${top}" width="${w}" height="${hh}" rx="3" fill="${v>=0?"var(--s1)":"var(--s2)"}" opacity="${y===SEL?1:.55}" data-y="${y}" data-tip="${y} · PIIN ${pc(v)} del PIB" style="cursor:pointer"/>`;
+  if(i%2===0||y===2019)g+=`<text class="axis" x="${x+w/2}" y="${H-8}" text-anchor="middle">${String(y).slice(2)}</text>`;
+  if(y===SEL)g+=`<text class="axis" x="${x+w/2}" y="${v>=0?top-5:top+hh+13}" text-anchor="middle" style="fill:var(--fg);font-weight:500">${pc(v)}</text>`;});
+ $("#c2 .cv").innerHTML=svgEl(W,H,g);tipBind($("#c2"));}
+function chart3(){const i=idx(SEL);const rows=INSTR.map(x=>{const r=net(i,x);return{n:x[0],v:r.a-r.l,a:r.a,l:r.l};});
+ const W=760,rh=34,m={l:230,r:70,t:6,b:6};const H=m.t+m.b+rows.length*rh;const mx=Math.max(...rows.map(r=>Math.abs(r.v)))*1.05;const xs=v=>m.l+(v+mx)/(2*mx)*(W-m.l-m.r);
+ let g=`<line x1="${xs(0)}" x2="${xs(0)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--muted)"/>`;
+ rows.forEach((r,k)=>{const y=m.t+k*rh+6;const x0=xs(0),x1=xs(r.v);g+=`<text x="${m.l-10}" y="${y+15}" text-anchor="end" style="fill:var(--fg);font-size:13px;font-family:var(--body)">${r.n}</text>
+  <rect x="${Math.min(x0,x1)}" y="${y}" width="${Math.max(1,Math.abs(x1-x0))}" height="${rh-12}" rx="3" fill="${r.v>=0?"var(--s1)":"var(--s2)"}" data-tip="A ${f(r.a)} − L ${f(r.l)} = ${fs(r.v)}"/>
+  <text class="axis" x="${r.v>=0?x1+6:x1-6}" y="${y+15}" text-anchor="${r.v>=0?"start":"end"}" style="fill:var(--fg)">${fs(r.v)}</text>`;});
+ $("#c3t").textContent=`Posición neta por instrumento, ${SEL} (mm de US$)`;$("#c3 .cv").innerHTML=svgEl(W,H,g);tipBind($("#c3"));}
+
+/* ---------- tabla ---------- */
+function renderTable(){let h=`<thead><tr><th>Año</th><th>Activos A</th><th>Pasivos L</th><th>A − L</th><th>PIIN anexo</th><th>PIIN % PIB</th><th>PIB implícito</th><th>CC</th><th>ΔPIIN</th><th>Valoración</th></tr></thead><tbody>`;
+ YRS.forEach(y=>{const o=get(y);h+=`<tr data-y="${y}" class="${y===SEL?"sel":""}"><td>${y}</td><td>${f(o.A)}</td><td>${f(o.L)}</td><td>${f(o.calc)}</td><td>${f(o.piin)}</td><td>${pc(o.pct)}</td><td>${o.gdp?f(o.gdp):'<span class="src-c">—</span>'}</td><td>${o.a4?f(o.a4.cc):'<span class="src-c">n/d</span>'}</td><td>${o.d!=null?fs(o.d):'<span class="src-c">n/d</span>'}</td><td>${o.val!=null?fs(o.val):'<span class="src-c">n/d</span>'}</td></tr>`;});
+ $("#tbl").innerHTML=h+"</tbody>";}
+
+/* ---------- práctica ---------- */
+const PK="piin-practica-v1";let P={pts:0,done:0,first:0};try{const r=JSON.parse(localStorage.getItem(PK));if(r)P=r;}catch(e){}
+let MODE="case",Q=null,tries=0;
+const rnd=(a,b)=>Math.round(a+Math.random()*(b-a));const pick=a=>a[Math.floor(Math.random()*a.length)];
+function mkQ(){const types=["piin","cc","val","fa","net","gdp"];const t=pick(types);
+ if(MODE==="case"){
+  if(t==="piin"){const y=pick(YRS),o=get(y);return{q:`Anexo 6, ${y}: activos de EE. UU. en el exterior ${f(o.A)} y pasivos ${f(o.L)} (mm de US$). ¿Cuál es la PIIN?`,a:o.calc,hint:"La PIIN es un stock: activos menos pasivos.",sol:`PIIN = A − L = ${f(o.A)} − ${f(o.L)} = ${f(o.calc)} (el anexo informa ${f(o.piin)}).`,src:"Anexo 6 · Clase Desbalances globales lám. 26"};}
+  if(t==="cc"){const y=pick(YRS.filter(y=>A4[y]&&!A4[y].src9a)),a=A4[y];return{q:`Anexo 4a, ${y}: bienes ${f(a.g)}, servicios ${fs(a.s)}, ingreso primario ${fs(a.p)} e ingreso secundario ${fs(a.sec)}. ¿Cuál es la cuenta corriente?`,a:a.cc,tol:4,hint:"Suma las cuatro balanzas con su signo.",sol:`CC = ${f(a.g)} + ${f(a.s)} + ${f(a.p)} + (${f(a.sec)}) = ${f(a.g+a.s+a.p+a.sec)} (anexo: ${f(a.cc)}; diferencia por redondeo).`,src:"Anexo 4a · Clase lám. 7"};}
+  if(t==="val"){const y=pick(YRS.filter(y=>get(y).val!=null)),o=get(y);return{q:`En ${y} la PIIN pasó de ${f(o.prev)} a ${f(o.piin)} y la cuenta corriente fue ${f(o.a4.cc)}. ¿Cuánto fue el efecto de valoración?`,a:o.val,hint:"Primero ΔPIIN = PIIN final − PIIN inicial. Luego valoración = ΔPIIN − CC (y la CC es negativa).",sol:`ΔPIIN = ${f(o.piin)} − (${f(o.prev)}) = ${fs(o.d)}. Valoración = ${fs(o.d)} − (${f(o.a4.cc)}) = ${fs(o.val)}.`,src:"Anexos 6 y 9a · Clase lám. 31"};}
+  if(t==="fa"){const y=pick(YRS.filter(y=>A4[y]&&!A4[y].src9a)),a=A4[y];const c=a.dA-a.dL+(a.der||0);return{q:`Anexo 4a, ${y}: aumento de activos de EE. UU. en el exterior ${f(a.dA)}, aumento de activos extranjeros en EE. UU. ${f(a.dL)}${a.der!=null?` y derivados netos ${fs(a.der)}`:""}. ¿Cuál es el préstamo neto de la cuenta financiera?`,a:c,tol:3,hint:"Compras netas de activos externos menos ventas netas de activos de EE. UU. a extranjeros (más derivados, si hay).",sol:`${f(a.dA)} − ${f(a.dL)}${a.der!=null?` + (${f(a.der)})`:""} = ${f(c)} (anexo: ${f(a.fa)}). Es negativo: EE. UU. se endeudó neto con el exterior.`,src:"Anexo 4a"};}
+  if(t==="net"){const y=pick(YRS),i=idx(y),ins=pick(INSTR.filter(x=>!Array.isArray(x[2]))),r=net(i,ins);return{q:`Anexo 6, ${y}: ${ins[0].toLowerCase()} es ${r.ap}% de los activos (${f(E6.A[i])}) y ${r.lp}% de los pasivos (${f(E6.L[i])}). ¿Cuál es la posición neta en ese instrumento?`,a:r.a-r.l,tol:Math.max(5,Math.abs(r.a-r.l)*0.01),hint:"Convierte cada porcentaje a monto (% × total) y resta pasivos de activos.",sol:`${r.ap}% × ${f(E6.A[i])} − ${r.lp}% × ${f(E6.L[i])} = ${f(r.a)} − ${f(r.l)} = ${fs(r.a-r.l)}.`,src:"Anexo 6"};}
+  const y=pick(YRS.filter(y=>E6.pct[idx(y)]!==0)),o=get(y);return{q:`Anexo 6, ${y}: la PIIN es ${f(o.piin)} mm de US$ y equivale a ${pc(o.pct)} del PIB. ¿Qué PIB implica (mm de US$)?`,a:o.gdp,tol:Math.abs(o.gdp)*0.02,hint:"PIIN/PIB = porcentaje, así que PIB = PIIN ÷ porcentaje (en decimal).",sol:`PIB ≈ ${f(o.piin)} ÷ ${dec(o.pct/100)} ≈ ${f(o.gdp)}. Es aproximado porque el % está redondeado.`,src:"Anexo 6 (fila Addendum)"};}
+ // valores nuevos
+ if(t==="piin"){const A=rnd(5,40)*500,L=A+rnd(-10,30)*250;return{q:`Un país tiene activos externos de ${f(A)} y pasivos externos de ${f(L)}. ¿Cuál es su PIIN?`,a:A-L,hint:"Activos menos pasivos.",sol:`PIIN = ${f(A)} − ${f(L)} = ${fs(A-L)}.`,src:"Clase lám. 26"};}
+ if(t==="cc"){const g=-rnd(10,90)*10,s=rnd(0,30)*10,p=rnd(-20,30)*5,sec=-rnd(1,15)*5;return{q:`Bienes ${f(g)}, servicios ${fs(s)}, ingreso primario ${fs(p)}, ingreso secundario ${fs(sec)}. ¿Cuenta corriente?`,a:g+s+p+sec,hint:"Suma las cuatro balanzas con su signo.",sol:`CC = ${f(g)} + ${f(s)} + ${f(p)} + (${f(sec)}) = ${f(g+s+p+sec)}.`,src:"Clase lám. 7"};}
+ if(t==="val"){const p0=-rnd(10,80)*100,cc=-rnd(2,9)*50,v=rnd(-12,12)*100,p1=p0+cc+v;return{q:`La PIIN pasa de ${f(p0)} a ${f(p1)} y la cuenta corriente es ${f(cc)}. ¿Efecto de valoración?`,a:v,hint:"Valoración = ΔPIIN − CC.",sol:`ΔPIIN = ${f(p1)} − (${f(p0)}) = ${fs(p1-p0)}. Valoración = ${fs(p1-p0)} − (${f(cc)}) = ${fs(v)}.`,src:"Clase lám. 31"};}
+ if(t==="fa"){const dA=rnd(2,20)*50,dL=dA+rnd(2,12)*50;return{q:`Los residentes compran activos externos por ${f(dA)} y los extranjeros compran activos del país por ${f(dL)}. Sin derivados, ¿cuál es el préstamo neto de la cuenta financiera?`,a:dA-dL,hint:"Compras netas de activos externos menos compras de extranjeros de activos locales.",sol:`${f(dA)} − ${f(dL)} = ${f(dA-dL)}: el país se endeuda neto, y eso financia un déficit en cuenta corriente de tamaño similar.`,src:"Anexo 4a (estructura)"};}
+ if(t==="net"){const A=rnd(10,40)*1000,L=A+rnd(2,15)*1000,ap=rnd(10,35),lp=rnd(5,30);return{q:`Activos ${f(A)} con ${ap}% en acciones; pasivos ${f(L)} con ${lp}% en acciones. ¿Posición neta en acciones?`,a:ap/100*A-lp/100*L,tol:5,hint:"Monto en activos = % × A; monto en pasivos = % × L.",sol:`${ap}% × ${f(A)} − ${lp}% × ${f(L)} = ${f(ap/100*A)} − ${f(lp/100*L)} = ${fs(ap/100*A-lp/100*L)}.`,src:"Anexo 6 (estructura)"};}
+ const pib=rnd(10,30)*1000,pct=-rnd(5,60);const piin=Math.round(pib*pct/100);return{q:`La PIIN es ${f(piin)} y equivale a ${pc(pct)} del PIB. ¿Cuál es el PIB?`,a:piin/(pct/100),tol:Math.abs(pib)*0.01,hint:"PIB = PIIN ÷ (porcentaje en decimal).",sol:`PIB = ${f(piin)} ÷ ${dec(pct/100)} ≈ ${f(piin/(pct/100))}.`,src:"Anexo 6 (estructura)"};}
+function parseNum(s){s=String(s).trim().replace(/\s/g,"").replace(/−/g,"-");if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))s=s.replace(/\./g,"").replace(",",".");else s=s.replace(",",".");return parseFloat(s);}
+function savedP(){try{localStorage.setItem(PK,JSON.stringify(P));}catch(e){}}
+function renderScore(){$("#score").innerHTML=`<span>Puntaje <b>${String(Math.round(P.pts*10)/10).replace(".",",")}</b> / ${P.done}</span><span>Al primer intento <b>${P.first}</b></span><button class="btn" id="rst" style="padding:3px 10px;font-size:.82rem">Reiniciar puntaje</button>`;}
+function newQ(){Q=mkQ();tries=0;$("#exq").innerHTML=`<p><b>${Q.q}</b></p><form class="ans" id="af"><label for="ain" class="muted" style="font-size:.88rem">Respuesta</label><input id="ain" inputmode="decimal" autocomplete="off" placeholder="ej.: −11.050"><button class="btn solid" type="submit">Comprobar</button><button class="btn" type="button" id="skip">Otro ejercicio</button></form><div id="afb"></div>`;}
+function check(v){const tol=Q.tol||Math.max(2,Math.abs(Q.a)*0.005);const ok=Math.abs(v-Q.a)<=tol;tries++;
+ if(ok){const p=tries===1?1:0.5;P.pts+=p;P.done++;if(tries===1)P.first++;savedP();renderScore();
+  $("#afb").innerHTML=`<div class="fb good"><b>${tries===1?"Correcto al primer intento · 1 punto":"Correcto con pista · 0,5 puntos"}</b><pre>${Q.sol}</pre><span class="muted">Fuente: ${Q.src}</span><button class="btn solid" id="nx" style="align-self:flex-start">Siguiente</button></div>`;$("#ain").disabled=true;return;}
+ if(tries===1){$("#afb").innerHTML=`<div class="fb hint"><b>Todavía no. Pista:</b><span>${Q.hint}</span><span class="muted">Segundo intento (vale 0,5).</span></div>`;return;}
+ P.done++;savedP();renderScore();$("#afb").innerHTML=`<div class="fb miss"><b>Incorrecto en ambos intentos · 0 puntos. La respuesta es ${f(Q.a)}.</b><pre>${Q.sol}</pre><span class="muted">Fuente: ${Q.src}</span><button class="btn solid" id="nx" style="align-self:flex-start">Siguiente</button></div>`;$("#ain").disabled=true;}
+
+/* ---------- eventos ---------- */
+function update(){try{localStorage.setItem("piin-year",SEL)}catch(e){}renderYears();renderDiagram();chart1();chart2();chart3();renderTable();}
+document.addEventListener("click",e=>{const yb=e.target.closest(".yr");if(yb){SEL=+yb.dataset.y;update();return;}
+ const tr=e.target.closest("#tbl tr[data-y]");if(tr){SEL=+tr.dataset.y;update();document.getElementById("diagram").scrollIntoView({behavior:"smooth"});return;}
+ if(e.target.id==="nx"||e.target.id==="skip"){newQ();return;}
+ if(e.target.id==="rst"){P={pts:0,done:0,first:0};savedP();renderScore();return;}
+ if(e.target.id==="mCase"||e.target.id==="mNew"){MODE=e.target.id==="mCase"?"case":"new";$("#mCase").setAttribute("aria-pressed",MODE==="case");$("#mNew").setAttribute("aria-pressed",MODE==="new");newQ();}});
+document.addEventListener("submit",e=>{if(e.target.id!=="af")return;e.preventDefault();const v=parseNum($("#ain").value);if(isNaN(v)){$("#afb").innerHTML=`<div class="fb hint">Escribe un número, por ejemplo −11050 o −11.050.</div>`;return;}if($("#ain").disabled)return;check(v);});
+update();renderScore();newQ();
+</script>
+
+</body>
+</html>
